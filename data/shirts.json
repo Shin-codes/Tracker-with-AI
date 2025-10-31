@@ -1,1 +1,30 @@
-[]
+[
+  {
+    "id": 1,
+    "name": "a red",
+    "color": "a",
+    "size": "red",
+    "status": "In Drawer"
+  },
+  {
+    "id": 2,
+    "name": "a white",
+    "color": "a",
+    "size": "white",
+    "status": "Laundry"
+  },
+  {
+    "id": 3,
+    "name": "a red",
+    "color": "a",
+    "size": "red",
+    "status": "In Drawer"
+  },
+  {
+    "id": 4,
+    "name": "blue large",
+    "color": "blue",
+    "size": "large",
+    "status": "Worn"
+  }
+]

@@ -40,6 +40,24 @@ def grouped_by_status(shirts: List[Shirt]) -> Dict[str, List[Shirt]]:
     return groups
 
 
+def view_grouped_inventory(shirts: List[Shirt]) -> Dict[str, List[Dict]]:
+    """Alias returning plain dicts for easier printing/serialization."""
+    groups = grouped_by_status(shirts)
+    return {
+        status: [
+            {
+                "id": s.id,
+                "name": s.name,
+                "color": s.color,
+                "size": s.size,
+                "status": s.status,
+            }
+            for s in items
+        ]
+        for status, items in groups.items()
+    }
+
+
 def find_by_id(shirts: List[Shirt], shirt_id: int) -> Shirt | None:
     for s in shirts:
         if s.id == shirt_id:
@@ -62,5 +80,10 @@ def delete_shirt(shirts: List[Shirt], shirt_id: int) -> None:
     if not s:
         raise ValueError("Shirt not found.")
     shirts.remove(s)
+
+
+def count_by_status(shirts: List[Shirt]) -> Dict[str, int]:
+    """Alias for counts_by_status with expected name."""
+    return counts_by_status(shirts)
 
 

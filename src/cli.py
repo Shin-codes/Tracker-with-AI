@@ -139,3 +139,8 @@ def run() -> None:
             print("Invalid option. Please choose a number from the menu.")
 
 
+def run_cli() -> None:
+    # Alias for clearer import in main
+    run()
+
+

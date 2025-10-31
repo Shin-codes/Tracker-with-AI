@@ -27,10 +27,11 @@ shirt_inventory_tracker/
 Usage
 -----
 
-Run the CLI:
+Run the CLI or Chatbot:
 
 ```
 python -m src.main
+# choose 1 for CLI or 2 for Chatbot
 ```
 
 Data is stored in `data/shirts.json`. The app auto-loads on start and saves after changes.
@@ -43,6 +44,14 @@ Features
 - Delete a shirt
 - Counts per status and total
 - Robust input validation and error handling
+
+Chatbot examples
+----------------
+- add blue large shirt to laundry
+- move blue large shirt to drawer
+- show inventory
+- count shirts
+- delete blue large shirt
 
 Testing
 -------

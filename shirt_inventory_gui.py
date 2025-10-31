@@ -1,13 +1,18 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
+import io
+from contextlib import redirect_stdout
 
-# Reuse data model and persistence from the CLI module
-from shirt_inventory_tracker import (
-    load_data,
-    save_data,
-    generate_next_id,
-    STATUSES,
+# Migrate GUI to use modular src package (shared with CLI/Chatbot)
+from src.models import Shirt, STATUSES
+from src.storage import load_shirts, save_shirts
+from src.inventory_manager import (
+    add_shirt as mgr_add_shirt,
+    update_status as mgr_update_status,
+    delete_shirt as mgr_delete_shirt,
+    counts_by_status,
 )
+from src.chatbot import process_message as chatbot_process
 
 
 class ShirtInventoryGUI(tk.Tk):
@@ -16,8 +21,8 @@ class ShirtInventoryGUI(tk.Tk):
         self.title("Shirt Inventory Tracker - GUI")
         self.geometry("820x520")
 
-        # In-memory data
-        self.shirts = load_data()
+        # In-memory data (shared with CLI/Chatbot)
+        self.shirts = load_shirts()
 
         # Build UI
         self._build_widgets()
@@ -56,7 +61,7 @@ class ShirtInventoryGUI(tk.Tk):
 
             self.listboxes[status] = listbox
 
-        # Right-side: Actions + Form
+        # Right-side: Actions + Form + Chatbot
         right = ttk.Frame(content)
         right.pack(side=tk.RIGHT, fill=tk.Y, padx=(10, 0))
 
@@ -103,6 +108,29 @@ class ShirtInventoryGUI(tk.Tk):
         btn_refresh = ttk.Button(right, text="Refresh", command=self._refresh_all)
         btn_refresh.pack(fill=tk.X, pady=(10, 0))
 
+        # Chatbot panel
+        bot = ttk.LabelFrame(right, text="Chatbot Assistant")
+        bot.pack(fill=tk.BOTH, expand=True, pady=(10, 0))
+
+        # Chat log with scrollbar
+        log_frame = ttk.Frame(bot)
+        log_frame.pack(fill=tk.BOTH, expand=True, padx=8, pady=(8, 4))
+        self.chat_log = tk.Text(log_frame, height=10, state=tk.NORMAL, wrap=tk.WORD)
+        self.chat_log.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        log_scroll = ttk.Scrollbar(log_frame, orient=tk.VERTICAL, command=self.chat_log.yview)
+        log_scroll.pack(side=tk.RIGHT, fill=tk.Y)
+        self.chat_log.configure(yscrollcommand=log_scroll.set)
+
+        # Input row
+        input_frame = ttk.Frame(bot)
+        input_frame.pack(fill=tk.X, padx=8, pady=(0, 8))
+        self.chat_input = ttk.Entry(input_frame)
+        self.chat_input.pack(side=tk.LEFT, fill=tk.X, expand=True)
+        send_btn = ttk.Button(input_frame, text="Send", command=self._on_chat_send)
+        send_btn.pack(side=tk.LEFT, padx=(6, 0))
+        # Enter key binding
+        self.chat_input.bind("<Return>", lambda e: self._on_chat_send())
+
     # ----- Helpers -----
     def _refresh_all(self) -> None:
         self._refresh_lists()
@@ -115,28 +143,24 @@ class ShirtInventoryGUI(tk.Tk):
 
         # Repopulate per status
         for status in STATUSES:
-            items = [s for s in self.shirts if s.get("status") == status]
+            items = [s for s in self.shirts if s.status == status]
             lb = self.listboxes[status]
             for s in items:
-                text = f"#{s['id']}: {s['name']} | {s['color']} | {s['size']}"
+                text = f"#{s.id}: {s.name} | {s.color} | {s.size}"
                 lb.insert(tk.END, text)
 
     def _refresh_counts(self) -> None:
-        counts = {status: 0 for status in STATUSES}
-        for s in self.shirts:
-            st = s.get("status")
-            if st in counts:
-                counts[st] += 1
+        counts = counts_by_status(self.shirts)
         total = len(self.shirts)
         for status in STATUSES:
-            self.count_labels[status].configure(text=f"{status}: {counts[status]}")
+            self.count_labels[status].configure(text=f"{status}: {counts.get(status, 0)}")
         self.total_label.configure(text=f"Total: {total}")
 
     def _get_current_status_tab(self) -> str:
         idx = self.notebook.index(self.notebook.select())
         return STATUSES[idx]
 
-    def _get_selected_shirt(self) -> dict | None:
+    def _get_selected_shirt(self) -> Shirt | None:
         status = self._get_current_status_tab()
         lb = self.listboxes[status]
         sel = lb.curselection()
@@ -153,7 +177,7 @@ class ShirtInventoryGUI(tk.Tk):
             messagebox.showerror("Error", "Could not parse selected item.")
             return None
         for s in self.shirts:
-            if s.get("id") == shirt_id:
+            if s.id == shirt_id:
                 return s
         messagebox.showerror("Error", "Selected shirt not found.")
         return None
@@ -172,15 +196,12 @@ class ShirtInventoryGUI(tk.Tk):
             messagebox.showwarning("Invalid Status", "Please select a valid status.")
             return
 
-        new_shirt = {
-            "id": generate_next_id(self.shirts),
-            "name": name,
-            "color": color,
-            "size": size,
-            "status": status,
-        }
-        self.shirts.append(new_shirt)
-        save_data(self.shirts)
+        try:
+            mgr_add_shirt(self.shirts, name, color, size, status)
+            save_shirts(self.shirts)
+        except Exception as e:
+            messagebox.showerror("Error", str(e))
+            return
         self._refresh_all()
 
         # Clear inputs
@@ -197,11 +218,15 @@ class ShirtInventoryGUI(tk.Tk):
         if new_status not in STATUSES:
             messagebox.showwarning("Invalid Status", "Please select a valid status.")
             return
-        if new_status == shirt.get("status"):
+        if new_status == shirt.status:
             messagebox.showinfo("No Change", "The shirt already has that status.")
             return
-        shirt["status"] = new_status
-        save_data(self.shirts)
+        try:
+            mgr_update_status(self.shirts, shirt.id, new_status)
+            save_shirts(self.shirts)
+        except Exception as e:
+            messagebox.showerror("Error", str(e))
+            return
         self._refresh_all()
 
     def _on_delete(self) -> None:
@@ -210,17 +235,42 @@ class ShirtInventoryGUI(tk.Tk):
             return
         resp = messagebox.askyesno(
             "Confirm Delete",
-            f"Delete #{shirt['id']} - {shirt['name']}?",
+            f"Delete #{shirt.id} - {shirt.name}?",
             icon="warning",
         )
         if not resp:
             return
         try:
-            self.shirts.remove(shirt)
-            save_data(self.shirts)
+            mgr_delete_shirt(self.shirts, shirt.id)
+            save_shirts(self.shirts)
             self._refresh_all()
-        except ValueError:
-            messagebox.showerror("Error", "Could not delete the selected shirt.")
+        except Exception as e:
+            messagebox.showerror("Error", str(e))
+
+    # ----- Chatbot Handlers -----
+    def _append_chat(self, text: str) -> None:
+        if not text:
+            return
+        self.chat_log.insert(tk.END, text + "\n")
+        self.chat_log.see(tk.END)
+
+    def _on_chat_send(self) -> None:
+        msg = self.chat_input.get().strip()
+        if not msg:
+            return
+        self._append_chat(f"You: {msg}")
+        buf = io.StringIO()
+        try:
+            with redirect_stdout(buf):
+                chatbot_process(msg, self.shirts)
+        finally:
+            output = buf.getvalue().strip()
+            if output:
+                for line in output.splitlines():
+                    self._append_chat(f"Bot: {line}")
+        save_shirts(self.shirts)
+        self._refresh_all()
+        self.chat_input.delete(0, tk.END)
 
 
 def main() -> None:
