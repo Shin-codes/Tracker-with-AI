@@ -1,0 +1,17 @@
+{
+  "how to add shirt": "To add a shirt, go to the 'Add New Shirt' section in the right panel. Fill in the Name, Color, Size fields, select a Status, and click 'Add Shirt'. You can also add an image by clicking '📷 Add Image' before adding the shirt.",
+  "how to edit shirt": "First, select a shirt from the list in the tabs (In Drawer, Laundry, or Worn). Then use the 'Edit Selected Shirt' form on the right to modify its details. Click '💾 Save Changes' when done.",
+  "how to upload image": "Click the '📷 Add Image' button in the Add form, or '📷 Change Image' in the Edit form. Select a valid image file (JPG, PNG, GIF, BMP) from your computer.",
+  "how to delete shirt": "Select the shirt you want to delete from the list, then click the '🗑️ Delete Shirt' button in the Edit Selected Shirt section. Confirm the deletion when prompted.",
+  "how to search": "Use the search bar at the top of the window. Type any part of a shirt's name, color, size, or status to filter the list instantly. Click 'Clear' to reset the search.",
+  "how to view statistics": "Click the '📊 Statistics' button at the top to see detailed analytics about your inventory, including counts by status, color, size, and image usage.",
+  "how to change status": "Select a shirt from the list, then use the Status dropdown in the Edit form, or use the chatbot command: 'move [shirt name] to [status]'.",
+  "what are statuses": "Your shirts can have three statuses: 'In Drawer' (clean and stored), 'Laundry' (needs washing), and 'Worn' (recently worn).",
+  "error image upload": "If image upload fails, make sure: 1) The file is a valid image format (JPG, PNG, GIF, BMP), 2) The file isn't corrupted, 3) You have proper file permissions.",
+  "error shirt not found": "The shirt you're looking for might not exist. Try searching with different terms, or check if you spelled the name correctly. Use 'show inventory' to see all shirts.",
+  "error required fields": "Name, Color, and Size are required when adding or editing a shirt. Make sure all three fields are filled in before saving.",
+  "app overview": "The Shirt Inventory Tracker helps you organize your shirts across three states: In Drawer, Laundry, and Worn. You can add images, search, edit details, and view statistics.",
+  "keyboard shortcuts": "Press Enter in the search bar to clear it. Press Enter in the chatbot input to send your message. Use the tabs to switch between shirt statuses.",
+  "best practices": "Keep shirt names descriptive (e.g., 'Blue Polo' instead of 'Shirt 1'). Add images to easily identify shirts. Regularly update statuses to track laundry needs."
+}
+
