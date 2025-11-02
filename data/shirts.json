@@ -4,27 +4,47 @@
     "name": "a red",
     "color": "a",
     "size": "red",
-    "status": "In Drawer"
+    "status": "In Drawer",
+    "image_path": ""
   },
   {
     "id": 2,
     "name": "a white",
     "color": "a",
     "size": "white",
-    "status": "Laundry"
+    "status": "Laundry",
+    "image_path": ""
   },
   {
     "id": 3,
     "name": "a red",
     "color": "a",
     "size": "red",
-    "status": "In Drawer"
+    "status": "In Drawer",
+    "image_path": ""
   },
   {
     "id": 4,
     "name": "blue large",
     "color": "blue",
     "size": "large",
-    "status": "Worn"
+    "status": "Worn",
+    "image_path": ""
+  },
+  {
+    "id": 5,
+    "name": "fake",
+    "color": "red",
+    "size": "Medium",
+    "status": "Worn",
+    "image_path": ""
+  },
+  {
+    "id": 6,
+    "name": "pula",
+    "color": "red",
+    "size": "large",
+    "status": "Laundry",
+    "image_path": "images\\shirt_6.png"
   }
 ]
