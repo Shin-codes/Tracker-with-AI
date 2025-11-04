@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import List, Dict, Any
 
 from .models import Shirt, STATUSES
 
@@ -51,6 +51,7 @@ def view_grouped_inventory(shirts: List[Shirt]) -> Dict[str, List[Dict]]:
                 "color": s.color,
                 "size": s.size,
                 "status": s.status,
+                "image_path": s.image_path,
             }
             for s in items
         ]
@@ -85,5 +86,89 @@ def delete_shirt(shirts: List[Shirt], shirt_id: int) -> None:
 def count_by_status(shirts: List[Shirt]) -> Dict[str, int]:
     """Alias for counts_by_status with expected name."""
     return counts_by_status(shirts)
+
+
+def update_shirt(shirts: List[Shirt], shirt_id: int, name: str = None, color: str = None, 
+                 size: str = None, status: str = None, image_path: str = None) -> Shirt:
+    """Update shirt properties. Only provided fields will be updated."""
+    s = find_by_id(shirts, shirt_id)
+    if not s:
+        raise ValueError("Shirt not found.")
+    
+    if name is not None:
+        if not name.strip():
+            raise ValueError("Name cannot be empty.")
+        s.name = name.strip()
+    
+    if color is not None:
+        if not color.strip():
+            raise ValueError("Color cannot be empty.")
+        s.color = color.strip()
+    
+    if size is not None:
+        if not size.strip():
+            raise ValueError("Size cannot be empty.")
+        s.size = size.strip()
+    
+    if status is not None:
+        if status not in STATUSES:
+            raise ValueError("Invalid status.")
+        s.status = status
+    
+    if image_path is not None:
+        s.image_path = image_path.strip() if image_path else ""
+    
+    return s
+
+
+def search_shirts(shirts: List[Shirt], query: str) -> List[Shirt]:
+    """Search shirts by name, color, size, or status (case-insensitive)."""
+    if not query:
+        return shirts
+    
+    query_lower = query.lower().strip()
+    results = []
+    
+    for s in shirts:
+        if (query_lower in s.name.lower() or 
+            query_lower in s.color.lower() or 
+            query_lower in s.size.lower() or 
+            query_lower in s.status.lower()):
+            results.append(s)
+    
+    return results
+
+
+def get_statistics(shirts: List[Shirt]) -> Dict[str, Any]:
+    """Get comprehensive statistics about the inventory."""
+    if not shirts:
+        return {
+            "total": 0,
+            "by_status": {},
+            "by_color": {},
+            "by_size": {},
+            "with_images": 0,
+        }
+    
+    stats = {
+        "total": len(shirts),
+        "by_status": counts_by_status(shirts),
+        "by_color": {},
+        "by_size": {},
+        "with_images": 0,
+    }
+    
+    for s in shirts:
+        # Count by color
+        stats["by_color"][s.color] = stats["by_color"].get(s.color, 0) + 1
+        
+        # Count by size
+        stats["by_size"][s.size] = stats["by_size"].get(s.size, 0) + 1
+        
+        # Count with images
+        if s.image_path:
+            stats["with_images"] += 1
+    
+    return stats
 
 

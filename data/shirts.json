@@ -1,30 +1,58 @@
 [
   {
-    "id": 1,
-    "name": "a red",
-    "color": "a",
-    "size": "red",
-    "status": "In Drawer"
-  },
-  {
-    "id": 2,
-    "name": "a white",
-    "color": "a",
-    "size": "white",
-    "status": "Laundry"
-  },
-  {
     "id": 3,
-    "name": "a red",
-    "color": "a",
-    "size": "red",
-    "status": "In Drawer"
+    "name": "medyo bago",
+    "color": "blue",
+    "size": "XXL",
+    "status": "Laundry",
+    "image_path": "images\\shirt_3.jpg"
   },
   {
     "id": 4,
     "name": "blue large",
     "color": "blue",
     "size": "large",
-    "status": "Worn"
+    "status": "Worn",
+    "image_path": ""
+  },
+  {
+    "id": 5,
+    "name": "fake",
+    "color": "red",
+    "size": "Medium",
+    "status": "Worn",
+    "image_path": ""
+  },
+  {
+    "id": 6,
+    "name": "bagong shirt",
+    "color": "black",
+    "size": "medium",
+    "status": "Laundry",
+    "image_path": "images\\shirt_6.jpg"
+  },
+  {
+    "id": 8,
+    "name": "poloshirt",
+    "color": "gray",
+    "size": "small",
+    "status": "Laundry",
+    "image_path": "images\\shirt_8.jpg"
+  },
+  {
+    "id": 9,
+    "name": "bagong damitasdfsadf",
+    "color": "black",
+    "size": "XL",
+    "status": "Laundry",
+    "image_path": "images\\shirt_9.jpg"
+  },
+  {
+    "id": 10,
+    "name": "Itim",
+    "color": "black",
+    "size": "large",
+    "status": "Worn",
+    "image_path": "images\\shirt_10.jpg"
   }
 ]
