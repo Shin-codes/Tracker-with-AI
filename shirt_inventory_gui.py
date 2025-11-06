@@ -21,23 +21,46 @@ from src.gui.components.chatbot_window import ChatbotWindow
 from src.gui.components.add_shirt_window import AddShirtWindow
 from src.gui.components.edit_shirt_window import EditShirtWindow
 from src.gui.components.shirt_card import ShirtCard
+from src.gui.components.landing_page import LandingPage
 
 
 class ShirtInventoryGUI(tk.Tk):
-    def __init__(self) -> None:
+    def __init__(self, show_immediately: bool = True) -> None:
         super().__init__()
         self.title("Shirt Inventory Tracker")
-        self.geometry("1300x750")
         self.minsize(800, 600)  # Minimum window size
         self.configure(bg="#F5F5F5")  # Light gray background
+        
+        # Set to maximized/fullscreen on Windows
+        try:
+            self.state('zoomed')  # Maximized on Windows
+        except:
+            # Fallback for other platforms or if zoomed doesn't work
+            try:
+                self.attributes('-zoomed', True)  # Alternative for some systems
+            except:
+                # Final fallback: use default geometry
+                self.geometry("1300x750")
+        
+        # Hide window initially if not showing immediately (for landing page)
+        if not show_immediately:
+            self.withdraw()
 
         # Base dimensions for scaling calculations
         self.base_width = 1300
         self.base_height = 750
         
-        # Responsive state
-        self.current_width = 1300
-        self.current_height = 750
+        # Responsive state - update after window is shown/maximized
+        self.update_idletasks()  # Update to get actual window size
+        try:
+            self.current_width = self.winfo_width()
+            self.current_height = self.winfo_height()
+        except:
+            # Fallback if window not yet visible
+            self.current_width = 1300
+            self.current_height = 750
+        self.prev_width = self.current_width
+        self.prev_height = self.current_height
         self.layout_mode = "medium"  # small, medium, large
         self.prev_layout_mode = None
         
@@ -531,7 +554,11 @@ class ShirtInventoryGUI(tk.Tk):
         if event and event.widget == self:
             self.current_width = event.width
             self.current_height = event.height
-            self._update_layout()
+            # Only update layout if size actually changed (not just position)
+            if self.current_width != self.prev_width or self.current_height != self.prev_height:
+                self.prev_width = self.current_width
+                self.prev_height = self.current_height
+                self._update_layout()
             # Update chatbot window position if visible
             if hasattr(self, 'chatbot'):
                 self.chatbot.update_position()
@@ -712,8 +739,41 @@ def _get_logo_path() -> Optional[str]:
 
 
 def main() -> None:
-    app = ShirtInventoryGUI()
-    app.mainloop()
+    # Color scheme for landing page
+    colors = {
+        'bg_main': '#F5F5F5',
+        'accent': '#8C00FF',
+        'text': '#333333',
+        'text_light': '#666666',
+    }
+    
+    # Create main app (hidden initially)
+    app = ShirtInventoryGUI(show_immediately=False)
+    
+    # Show landing page first
+    def launch_main_app():
+        app.deiconify()  # Show main app
+        # Set to maximized/fullscreen after showing
+        try:
+            app.state('zoomed')  # Maximized on Windows
+        except:
+            try:
+                app.attributes('-zoomed', True)  # Alternative for some systems
+            except:
+                pass
+        # Update window dimensions after showing (for maximized state)
+        app.update_idletasks()
+        try:
+            app.current_width = app.winfo_width()
+            app.current_height = app.winfo_height()
+            app.prev_width = app.current_width
+            app.prev_height = app.current_height
+        except:
+            pass
+        app.mainloop()
+    
+    landing = LandingPage(launch_main_app, colors, duration_ms=2000)
+    landing.mainloop()
 
 
 if __name__ == "__main__":

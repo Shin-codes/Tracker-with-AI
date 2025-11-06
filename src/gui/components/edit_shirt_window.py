@@ -8,7 +8,13 @@ from PIL import Image, ImageTk
 from src.models import Shirt, STATUSES
 from src.inventory_manager import update_shirt as mgr_update_shirt, delete_shirt as mgr_delete_shirt
 from src.storage import save_shirts
-from src.image_utils import save_image_from_path, delete_image, get_image_display_path
+from src.image_utils import (
+    save_image_from_path,
+    delete_image,
+    get_image_display_path,
+    detect_dominant_color,
+    map_rgb_to_basic_color,
+)
 
 
 class EditShirtWindow(tk.Toplevel):
@@ -114,9 +120,11 @@ class EditShirtWindow(tk.Toplevel):
         self.entry_name = ttk.Entry(right_fields, font=self.fonts['normal'])
         self.entry_name.pack(fill=tk.X, pady=(0, 12))
         
-        tk.Label(right_fields, text="Color", font=self.fonts['small'], bg=self.colors['bg_panel'],
+        tk.Label(right_fields, text="Color (auto)", font=self.fonts['small'], bg=self.colors['bg_panel'],
                 fg=self.colors['text_light']).pack(anchor=tk.W, pady=(0, 4))
-        self.entry_color = ttk.Entry(right_fields, font=self.fonts['normal'])
+        # Read-only color field populated from image detection
+        self.color_var = tk.StringVar()
+        self.entry_color = ttk.Entry(right_fields, font=self.fonts['normal'], textvariable=self.color_var, state='readonly')
         self.entry_color.pack(fill=tk.X, pady=(0, 12))
         
         tk.Label(right_fields, text="Size", font=self.fonts['small'], bg=self.colors['bg_panel'],
@@ -150,8 +158,19 @@ class EditShirtWindow(tk.Toplevel):
         """Load shirt data into form."""
         self.entry_name.delete(0, tk.END)
         self.entry_name.insert(0, self.shirt.name)
-        self.entry_color.delete(0, tk.END)
-        self.entry_color.insert(0, self.shirt.color)
+        # Populate color from existing image if available; otherwise show stored value
+        try:
+            display_path = get_image_display_path(self.shirt.image_path)
+            if display_path:
+                rgb = detect_dominant_color(display_path)
+                value = map_rgb_to_basic_color(rgb)
+            else:
+                value = self.shirt.color
+        except Exception:
+            value = self.shirt.color
+        self.entry_color.configure(state='normal')
+        self.color_var.set(value)
+        self.entry_color.configure(state='readonly')
         self.entry_size.delete(0, tk.END)
         self.entry_size.insert(0, self.shirt.size)
         self.combo_status.set(self.shirt.status)
@@ -201,10 +220,26 @@ class EditShirtWindow(tk.Toplevel):
                     delete_image(self.shirt.image_path)
                 
                 new_path = save_image_from_path(file_path, self.shirt.id, os.path.basename(file_path))
-                mgr_update_shirt(self.shirts, self.shirt.id, image_path=new_path)
+                # Detect dominant color from the new image and update shirt color
+                try:
+                    abs_path = os.path.abspath(new_path) if os.path.isabs(new_path) else get_image_display_path(new_path)
+                    rgb = detect_dominant_color(abs_path) if abs_path else None
+                except Exception:
+                    rgb = None
+
+                if rgb is not None:
+                    auto_color = map_rgb_to_basic_color(rgb)
+                else:
+                    auto_color = self.color_var.get().strip() or self.shirt.color
+
+                mgr_update_shirt(self.shirts, self.shirt.id, image_path=new_path, color=auto_color)
                 save_shirts(self.shirts)
                 self.refresh_callback()
                 self._update_image_display()
+                # Reflect new auto-detected color in the read-only field
+                self.entry_color.configure(state='normal')
+                self.color_var.set(auto_color)
+                self.entry_color.configure(state='readonly')
                 messagebox.showinfo("Success", "Image updated successfully!")
             except Exception as e:
                 messagebox.showerror("Error", f"Failed to update image: {str(e)}")
@@ -230,12 +265,12 @@ class EditShirtWindow(tk.Toplevel):
     def _on_save(self) -> None:
         """Handle saving changes."""
         name = self.entry_name.get().strip()
-        color = self.entry_color.get().strip()
+        color = self.color_var.get().strip()
         size = self.entry_size.get().strip()
         status = self.combo_status.get().strip()
         
-        if not name or not color or not size:
-            messagebox.showwarning("Missing Data", "Name, Color, and Size are required.")
+        if not name or not size:
+            messagebox.showwarning("Missing Data", "Name and Size are required.")
             return
         if status not in STATUSES:
             messagebox.showwarning("Invalid Status", "Please select a valid status.")
