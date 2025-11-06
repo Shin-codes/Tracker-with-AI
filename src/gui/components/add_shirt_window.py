@@ -8,7 +8,7 @@ from PIL import Image, ImageTk
 from src.models import STATUSES
 from src.inventory_manager import add_shirt as mgr_add_shirt, update_shirt as mgr_update_shirt
 from src.storage import save_shirts
-from src.image_utils import save_image_from_path
+from src.image_utils import save_image_from_path, detect_dominant_color, map_rgb_to_basic_color, get_image_display_path
 
 
 class AddShirtWindow(tk.Toplevel):
@@ -114,9 +114,11 @@ class AddShirtWindow(tk.Toplevel):
         self.entry_name.pack(fill=tk.X, pady=(0, 12))
         self.entry_name.focus()
         
-        tk.Label(right_fields, text="Color", font=self.fonts['small'], bg=self.colors['bg_panel'],
+        tk.Label(right_fields, text="Color (auto, named)", font=self.fonts['small'], bg=self.colors['bg_panel'],
                 fg=self.colors['text_light']).pack(anchor=tk.W, pady=(0, 4))
-        self.entry_color = ttk.Entry(right_fields, font=self.fonts['normal'])
+        # Make color read-only, auto-filled from image detection
+        self.color_var = tk.StringVar()
+        self.entry_color = ttk.Entry(right_fields, font=self.fonts['normal'], textvariable=self.color_var, state='readonly')
         self.entry_color.pack(fill=tk.X, pady=(0, 12))
         
         tk.Label(right_fields, text="Size", font=self.fonts['small'], bg=self.colors['bg_panel'],
@@ -162,6 +164,16 @@ class AddShirtWindow(tk.Toplevel):
         if file_path:
             self.pending_image_path = file_path
             self._update_image_preview(file_path)
+            # Detect dominant color and populate read-only field
+            try:
+                # Use the temporary selected file path directly for detection
+                rgb = detect_dominant_color(file_path)
+                color_name = map_rgb_to_basic_color(rgb)
+                self.entry_color.configure(state='normal')
+                self.color_var.set(color_name)
+                self.entry_color.configure(state='readonly')
+            except Exception as e:
+                messagebox.showwarning("Color Detection", f"Failed to detect color: {str(e)}")
     
     def _update_image_preview(self, image_path: str) -> None:
         """Update the image preview in the placeholder."""
@@ -187,12 +199,30 @@ class AddShirtWindow(tk.Toplevel):
     def _on_add(self) -> None:
         """Handle adding shirt."""
         name = self.entry_name.get().strip()
-        color = self.entry_color.get().strip()
+        color = self.color_var.get().strip()
         size = self.entry_size.get().strip()
         status = self.combo_status.get().strip()
         
-        if not name or not color or not size:
-            messagebox.showwarning("Missing Data", "Name, Color, and Size are required.")
+        if not name or not size:
+            messagebox.showwarning("Missing Data", "Name and Size are required.")
+            return
+        # Enforce image and color since override is disabled
+        if not self.pending_image_path:
+            messagebox.showwarning("Image Required", "Please add an image so we can detect the shirt color.")
+            return
+        if not color:
+            # Attempt one more detection pass before failing
+            try:
+                rgb = detect_dominant_color(self.pending_image_path)
+                color_name = map_rgb_to_basic_color(rgb)
+                self.entry_color.configure(state='normal')
+                self.color_var.set(color_name)
+                self.entry_color.configure(state='readonly')
+                color = self.color_var.get().strip()
+            except Exception:
+                pass
+        if not color:
+            messagebox.showwarning("Color Detection", "Could not detect color from the image.")
             return
         if status not in STATUSES:
             messagebox.showwarning("Invalid Status", "Please select a valid status.")

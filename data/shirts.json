@@ -2,26 +2,10 @@
   {
     "id": 3,
     "name": "medyo bago",
-    "color": "blue",
+    "color": "gray",
     "size": "XXL",
     "status": "Laundry",
     "image_path": "images\\shirt_3.jpg"
-  },
-  {
-    "id": 4,
-    "name": "blue large",
-    "color": "blue",
-    "size": "large",
-    "status": "Worn",
-    "image_path": ""
-  },
-  {
-    "id": 5,
-    "name": "fake",
-    "color": "red",
-    "size": "Medium",
-    "status": "Worn",
-    "image_path": ""
   },
   {
     "id": 6,
@@ -54,5 +38,53 @@
     "size": "large",
     "status": "Worn",
     "image_path": "images\\shirt_10.jpg"
+  },
+  {
+    "id": 12,
+    "name": "browny",
+    "color": "black",
+    "size": "medium",
+    "status": "In Drawer",
+    "image_path": "images\\shirt_12.jpg"
+  },
+  {
+    "id": 13,
+    "name": "longsleeve",
+    "color": "pink",
+    "size": "large",
+    "status": "In Drawer",
+    "image_path": "images\\shirt_13.jpg"
+  },
+  {
+    "id": 14,
+    "name": "valentine",
+    "color": "red",
+    "size": "small",
+    "status": "In Drawer",
+    "image_path": "images\\shirt_14.jpg"
+  },
+  {
+    "id": 15,
+    "name": "grass",
+    "color": "green",
+    "size": "XL",
+    "status": "In Drawer",
+    "image_path": "images\\shirt_15.jpg"
+  },
+  {
+    "id": 16,
+    "name": "tire",
+    "color": "black",
+    "size": "small",
+    "status": "In Drawer",
+    "image_path": "images\\shirt_16.jpg"
+  },
+  {
+    "id": 17,
+    "name": "cubic",
+    "color": "gray",
+    "size": "Medium",
+    "status": "In Drawer",
+    "image_path": "images\\shirt_17.jpg"
   }
 ]
